@@ -1,150 +1,122 @@
-################################################################################
-# mysql-enaber.py - 0.5
 #
-# A simple enabler that starts/stops MySQL server on a SF node
-#
+# Copyright (c) 2013 TIBCO Software Inc. All Rights Reserved.
 # 
-################################################################################
+# Use is subject to the terms of the TIBCO license terms accompanying the download of this code. 
+# In most instances, the license terms are contained in a file named license.txt.
+#
 
-from threading import Thread
-from subprocess import Popen
-from subprocess import PIPE
-from subprocess import STDOUT
-from time import sleep
+from com.datasynapse.fabric.admin.info import AllocationInfo
+from com.datasynapse.fabric.util import GridlibUtils, ContainerUtils
+from com.datasynapse.fabric.common import RuntimeContextVariable, ActivationInfo
+import java.lang.System
+from subprocess import call, Popen
+import os
+import platform
+import time
+import socket
+import fnmatch
 
-# writes msg int the engine log
+# writes the message in the engine log
 def logInfo(msg):
   logger.info(msg)
-  
-# executes an OS command and returns its output
-def execute(cmd):
-  std=Popen(cmd,stdout=PIPE,stderr=STDOUT,close_fds=True)
-  out=std.stdout.read()
-  return out
-    
-# change the permissions of a file so it can be executed
-def makeRunnable(cmd):
-  exec(["/bin/chmod","a+x",cmd])
-    
-# prepends the right path and appends the standard arguments for all mysql commands
-def buildCommand(exe):
-  pdh=runtimeContext.getVariable("MYSQL_ROOT_DIR").getValue()
-  sck=runtimeContext.getVariable("MYSQL_SOCKET").getValue()
-  cmd=[pdh+"/bin/"+exe]
-  cmd.append("--user=root")
-  cmd.append("--socket="+sck)
-  return cmd
-  
-# tries to ping the database server and returns the resulting output 
-def pingDaemon():
-  cmd=buildCommand("mysqladmin")
-  cmd.append("ping")
-  return execute(cmd)
- 
-# runs the database server in the current thread *and blocks!* just be careful
-def runDaemon():
-  nls=runtimeContext.getVariable("MYSQL_LANGUAGE").getValue()
-  dta=runtimeContext.getVariable("MYSQL_DATA_DIR").getValue()
-  prt=runtimeContext.getVariable("MYSQL_PORT").getValue()
-  cmd=buildCommand("mysqld")
-  cmd.append("--language="+nls)
-  cmd.append("--datadir="+dta)
-  cmd.append("--port="+prt)
-  return execute(cmd)
-  
-# issues the shutdown command to the database server
-def stopDaemon():
-  cmd=buildCommand("mysqladmin")
-  cmd.append("shutdown")
-  return execute(cmd)
-  
-# a class used to run the database server in a different thread so we don't block forever
-class DaemonThread(Thread):
-  # definition that gets executed when the underlying Thread is run
-  def run(self):
-    out=runDaemon()
-    
-# checks if the database server is running by pinging it
-def isRunning():
-  out=pingDaemon()
-  if out.find("is alive")==-1:
-    return False
-  return True
 
-# starts the MySQL Enabler
+def prepareWorkDirectory():
+    proxy.prepareWorkDirectory()
+  
+def doInit(additionalVariables):
+    # create the data, tmp, and mysqld directories
+    workdir = runtimeContext.getVariable('CONTAINER_WORK_DIR').getValue() 
+    datadir = runtimeContext.getVariable('MYSQL_DATA_DIR').getValue()
+    logInfo("Creating data, tmp, and mysqdd directories in " + workdir)
+    if (not os.path.exists(datadir)) :
+        os.mkdir(datadir)
+    os.mkdir(os.path.join(workdir, "mysqld") )
+    os.mkdir(os.path.join(workdir, "tmp") )
+    proxy.doInit(additionalVariables)
+
 def doStart():
-  logInfo("Starting MySQL Enabler")
-  # make sure needed executables have the right permissions
-  pdh=runtimeContext.getVariable("MYSQL_ROOT_DIR").getValue()
-  execute(["/bin/chmod","a+x",pdh+"/bin/mysql"])
-  execute(["/bin/chmod","a+x",pdh+"/bin/mysqladmin"])
-  execute(["/bin/chmod","a+x",pdh+"/bin/mysqld"])
-  # first check if database is already running
-  if isRunning():
-    raise Exception("MySQL Already Running")
-  # start the database server in a different thread
-  dt=DaemonThread()
-  dt.start()
-  
-# stops the MySQL Enabler
-def doShutdown():
-  logInfo("Shutting down MySQL Enabler")
-  stopDaemon()
-  
-# checks if the MySQL Enabler has been sucessfully started
-def hasContainerStarted():
-  if not isRunning():
-    logInfo("MySQL Server not yet running")
-    return False
-  logInfo("MySQL Server started")
-  return True
-  
-# checks if the MySQL Enabler is still running; if not it will try to restart it at least once
-# to avoid shutting down other dependent components
-def isContainerRunning():
-  if isRunning():
-    return True
-  logInfo("MySQL Server is not running, trying to restart it")
-  dt=DaemonThread()
-  dt.start()
-  sleep(10)
-  if isRunning():
-    logInfo("MySQL Server restarted successfully")
-    return True
-  logInfo("MySQL Server didn't restart, notifying broker")
-  return False
-  
-# returns the value of the named statistic; mysqladmin extended-status returns a table with the
-# following format, and we extract the value from it in the best way we found at the time ;)
-# +-----------------------+------------+
-# | HEADER                | HEADER     |
-# +-----------------------+------------+
-# | statName              | value      |
-# | statName              | value      |
-# | statName              | value      |
-# | statName              | value      |
-# | statName              | value      |
-# | statName              | value      |
-# ...
-# | statName              | value      |
-# +-----------------------+------------+
-def getStatistic(statName):
-  logInfo("Fetching MySQL Statistic "+statName)
-  # execute the command to gather statistics
-  cmd=buildCommand("mysqladmin")
-  cmd.append("extended-status")
-  out=execute(cmd)
-  # find the corresponding line, take into account the beautified names used by the Enabler
-  idx=out.find("| "+statName.replace(" ","_").capitalize()+" ")
-  if idx==-1:
-    # we got an unkown name!
-    logInfo("MySQL doesn't provide "+statName)
-    return 0
-  # isolate the line we need
-  lne=out[idx:].splitlines()[0]
-  # return the value from the second column
-  return float(lne.split("|")[2])
-
+    workdir = runtimeContext.getVariable('CONTAINER_WORK_DIR').getValue() 
+    basedir = runtimeContext.getVariable('MYSQL_BASE_DIR').getValue() 
+    datadir = runtimeContext.getVariable('MYSQL_DATA_DIR').getValue()
+    port = runtimeContext.getVariable('MYSQL_PORT').getValue() 
+    user = runtimeContext.getVariable('MYSQL_USER').getValue()
+    pw = runtimeContext.getVariable('MYSQL_PW').getValue()
+    msgdir = runtimeContext.getVariable('MYSQL_LANG_MESSAGES_DIR').getValue()
+    lang = runtimeContext.getVariable('MYSQL_LANGUAGE').getValue()
+    socket = runtimeContext.getVariable('MYSQL_SOCKET').getValue()
+    bindir = os.path.join(basedir, "bin")
+    scriptdir = os.path.join(basedir, "scripts")
+    
+    logInfo("Initializing MySQL database " + os.path.join(workdir, "data"))
+    call(["chmod", "-fR", "+x", bindir])
+    call(["chmod", "-fR", "+x", scriptdir])
+    
+    scriptname="mysql_install_db"
+    if (platform.system() == "Windows"):
+        scriptname+=".pl"
+    call([os.path.join(scriptdir, scriptname), "--basedir=" + basedir, "--datadir=" + datadir])
+    
+    logInfo("Running mysqld")
+    Popen([os.path.join(bindir, "mysqld"), "--socket=" + socket, "--datadir=" + datadir, "--lc-messages-dir=" + msgdir, "--lc-messages=" + lang, "--pid-file=" + os.path.join(workdir, "mysqld", "mysqld.pid")])
+    time.sleep(20)
+    
+    logInfo("Setting local password")
+    call([os.path.join(bindir, "mysqladmin"), "--socket=" + socket, "-u", user, "password", pw])
+    
+    host = socket.gethostname()
+    logInfo("Setting network password")
+    call([os.path.join(bindir, "mysqladmin"), "--port=" + port, "-h", host, "-u", user, "password", pw])
    
-  
+def doInstall(info):
+    archiveinfo = features.get("Archive Support")
+    enginedir = runtimeContext.getVariable('ENGINE_WORK_DIR').getValue()
+    workdir = runtimeContext.getVariable('CONTAINER_WORK_DIR').getValue()
+    basedir = runtimeContext.getVariable('MYSQL_BASE_DIR').getValue() 
+    user = runtimeContext.getVariable('MYSQL_USER').getValue()
+    pw = runtimeContext.getVariable('MYSQL_PW').getValue()
+    socket = runtimeContext.getVariable('MYSQL_SOCKET').getValue()
+    tmpdir = os.path.join(workdir, "tmp") 
+    bindir = os.path.join(basedir, "bin")
+    if archiveinfo:
+        for i in range(archiveinfo.getArchiveCount()):
+            archive = archiveinfo.getArchiveInfo(i)
+            archname = archive.getArchiveFilename()
+            logInfo("Installing archive " + archive.getArchiveFilename())
+            if (fnmatch.fnmatch(archname, "*.sql.zip")):
+                sqlfile = archname.rsplit(".", 1)[0]
+                database = sqlfile.rsplit(".", 1)[0]
+                call(["unzip", "-d", tmpdir, os.path.join(enginedir, archiveinfo.getArchiveDirectory(), archname)])     
+                call([os.path.join(bindir, "mysqladmin"), "--socket=" + socket, "--user=" + user, "--password="+pw, "create", database])
+                call([os.path.join(bindir, "mysql"), "--user=" + user, "--password=" + pw, "--socket=" + socket, database], stdin=open(os.path.join(tmpdir, sqlfile), "r"))
 
+def doUninstall():
+    print "doUninstall"    
+ 
+def doShutdown():
+    workdir = runtimeContext.getVariable('CONTAINER_WORK_DIR').getValue()
+    port = runtimeContext.getVariable('MYSQL_PORT').getValue() 
+    pidfile = open(os.path.join(workdir, "mysqld", "mysqld.pid"), "r")
+    pids = pidfile.readlines()
+    pidfile.close()
+    os.kill(int(pids[0]), 15)
+    
+# running condition
+def getContainerRunningConditionPollPeriod():
+    return 5000
+
+def isContainerRunning():
+    port = runtimeContext.getVariable('MYSQL_PORT').getValue() 
+    basedir = runtimeContext.getVariable('MYSQL_BASE_DIR').getValue()
+    user = runtimeContext.getVariable('MYSQL_USER').getValue()
+    pw = runtimeContext.getVariable('MYSQL_PW').getValue() 
+    bindir = os.path.join(basedir, "bin")
+    host = socket.gethostname()
+    status = call([os.path.join(bindir, "mysqladmin"), "--port=" + port, "-h", host, "--user=" + user, "--password=" + pw, "ping"])
+    ContainerUtils.getLogger(proxy).info("mysqladmin ping returns " + str(status))
+    if status == 0:
+        return True
+    else:
+        return False
+#    
+def getComponentRunningConditionErrorMessage():
+    return "mysqladmin ping failure"

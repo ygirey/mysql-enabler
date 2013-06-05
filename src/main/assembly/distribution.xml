@@ -15,8 +15,8 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.build.directory}/tmp/mysql-5.5.30-linux2.6-x86_64</directory>
-            <outputDirectory>mysql-5.5.30-linux2.6-x86_64</outputDirectory>
+            <directory>${project.build.directory}/tmp/${distribution.basename}</directory>
+            <outputDirectory>mysql</outputDirectory>
             <filtered>false</filtered>
             <includes>
                 <include>**/*</include>

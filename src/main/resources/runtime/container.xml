@@ -7,42 +7,50 @@
 #
 # Common Variables (Change as Desired)
 #
-# MYSQL_DATA_DIR - path where the database files are located; if you change this
-#                  and you want capture to work you might need to modify other
-#                  variables (CAPTURE_INCLUDES, MYSQL_LANGUAGE, etc) and may be
-#                  the config.xml file
+# MYSQL_DATA_DIR - path where the database files are located; 
+#				NOTE: for persistence across engine hosts, it is recommended you
+#               specify a network-mounted directory for this variable.
+#               Changing this might also affect other variables (e.g, CAPTURE_INCLUDES)              
 #
 # MYSQL_PORT - port where this database listens for connections
+#
+# MYSQL_USER - the MySQL user account the enabler will use
+#
+# MYSQL_PW - the password for MYSQL_USER
 #
 # Power Variables (Change If You Know What You're Doing)
 #
 # CAPTURE_INCLUDES - common capture stuff, currently it includes everything
 #                    under the standard data directory
 #
-# MYSQL_LANGUAGE - path to NLS files
+# MYSQL_LANGUAGE - the language for error messages, such as "en_US"
+#
+# MYSQL_LANG_MESSAGES_DIR - error message language location, passed to 
+#                             -lc-messages-dir parameter
 #
 # Internal Variables (Don't Change Unless Absolutely Needed)
 #
-# MYSQL_ROOT_DIR - path where MySQL resides after installation - change
+# MYSQL_BASE_DIR - path where MySQL resides after installation - change
 #                  CONTAINER_WORK_DIR instead
 #
 # MYSQL_HOST_IP - IP address where this database listens for connections
 #
 # MYSQL_SOCKET - socket file for localhost communications; mainly between
-#                mysqladmin and mysqld 
+#                mysqladmin and mysqld
+#
 #
  ################################################################################
 -->
 <container class="com.datasynapse.fabric.container.ExecContainer">
     <property name="name" value="MySQL Enabler"/>
     <property name="description" value="Enabler for MySQL 5.6"/>
-    <property name="version" value="0.0.5"/>
+    <property name="version" value="1.0"/>
     <property name="distributionVersion" value="5.6.12"/>
     <property name="blocking" value="false"/>
     <property name="supportedDomainType" value="Default"/>
     
     <script class="com.datasynapse.fabric.common.script.Script">
-        <property name="name" value="mysql-enabler.py"/>
+        <property name="name" value="mysql-enabler-egoodman.py"/>
         <property name="language" value="jython"/>
         <property name="languageVersion" value="2.5"/>
     </script>
@@ -60,14 +68,24 @@
             <property name="value" value="false"/>
         </variable>
         <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
-            <property name="name" value="MYSQL_ROOT_DIR"/>
+            <property name="name" value="MYSQL_BASE_DIR"/>
             <property name="value" value="${CONTAINER_WORK_DIR}/mysql"/>
             <property name="description" value="Path where MySQL resides after installation"/>
         </variable>
         <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
             <property name="name" value="MYSQL_DATA_DIR"/>
-            <property name="value" value="${MYSQL_ROOT_DIR}/data"/>
+            <property name="value" value="${MYSQL_BASE_DIR}/data"/>
             <property name="description" value="Path where database files are located"/>
+        </variable>
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+            <property name="name" value="MYSQL_USER"/>
+            <property name="value" value="root"/>
+            <property name="description" value="MySQL user"/>
+        </variable>
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+            <property name="name" value="MYSQL_PW"/>
+            <property name="value" value="changeme"/>
+            <property name="description" value="MySQL password"/>
         </variable>
         <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
             <property name="name" value="MYSQL_HOST_IP"/>
@@ -82,7 +100,7 @@
         </variable>
         <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
             <property name="name" value="CAPTURE_INCLUDES"/>
-            <property name="value" value="mysql/data/*"/>
+            <property name="value" value="${MYSQL_DATA_DIR}/*"/>
         </variable>
         <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
             <property name="name" value="CAPTURE_EXCLUDES"/>
@@ -90,11 +108,15 @@
         </variable>
         <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
             <property name="name" value="MYSQL_SOCKET"/>
-            <property name="value" value="${MYSQL_ROOT_DIR}/mysql.sock"/>
+            <property name="value" value="${MYSQL_BASE_DIR}/mysql.sock"/>
+        </variable>
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+        	<property name="name" value="MYSQL_LANG_MESSAGES_DIR"/>
+            <property name="value" value="${MYSQL_BASE_DIR}/share/english"/>
         </variable>
         <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
             <property name="name" value="MYSQL_LANGUAGE"/>
-            <property name="value" value="${MYSQL_ROOT_DIR}/lc"/>
+            <property name="value" value="en_US"/>
         </variable>
     </runtimecontexttemplate>
     

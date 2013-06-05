@@ -9,7 +9,8 @@
     <description></description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        
+        <distribution.basename>mysql-5.6.12-linux-glibc2.5-x86_64</distribution.basename>
+        <distribution.type>tar.gz</distribution.type>
         <distribution.os>linux64</distribution.os>
         <distribution.version>5.6.12</distribution.version>
     </properties>
@@ -61,7 +62,7 @@
                                 <configuration>
                                     <tasks>
                                         <ant target="unpack" inheritRefs="true">
-                                            <property name="source" value="${distribution.location}"/>
+                                            <property name="source" value="${distribution.location}/${distribution.basename}.${distribution.type}"/>
                                             <property name="target" value="${project.build.directory}/tmp"/> 
                                         </ant>    
                                     </tasks>
@@ -69,6 +70,7 @@
                             </execution>
                         </executions>
                     </plugin>
+                    
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
                         <version>2.4</version>
