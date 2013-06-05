@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grid-library os="linux64">
+  <grid-library-name>mysql-enabler</grid-library-name>
+  <grid-library-version>1.0</grid-library-version>
+     <dependency>
+       <grid-library-name>mysql-distribution</grid-library-name>
+       <grid-library-version>${distribution.version}</grid-library-version>
+   </dependency>
+</grid-library>	

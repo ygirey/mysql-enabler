@@ -1,0 +1,5 @@
+<containerConfig>
+  <configFiles baseDir="." include="my.cnf">
+    <velocity enabled="true"/>
+  </configFiles>
+</containerConfig>

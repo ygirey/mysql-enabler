@@ -1,0 +1,1654 @@
+<?xml version="1.0"?>
+<!--
+################################################################################
+# mysql-5.6.12-enabler-gridlib
+#
+# MySQL Enabler Definition
+#
+# Common Variables (Change as Desired)
+#
+# MYSQL_DATA_DIR - path where the database files are located; if you change this
+#                  and you want capture to work you might need to modify other
+#                  variables (CAPTURE_INCLUDES, MYSQL_LANGUAGE, etc) and may be
+#                  the config.xml file
+#
+# MYSQL_PORT - port where this database listens for connections
+#
+# Power Variables (Change If You Know What You're Doing)
+#
+# CAPTURE_INCLUDES - common capture stuff, currently it includes everything
+#                    under the standard data directory
+#
+# MYSQL_LANGUAGE - path to NLS files
+#
+# Internal Variables (Don't Change Unless Absolutely Needed)
+#
+# MYSQL_ROOT_DIR - path where MySQL resides after installation - change
+#                  CONTAINER_WORK_DIR instead
+#
+# MYSQL_HOST_IP - IP address where this database listens for connections
+#
+# MYSQL_SOCKET - socket file for localhost communications; mainly between
+#                mysqladmin and mysqld 
+#
+ ################################################################################
+-->
+<container class="com.datasynapse.fabric.container.ExecContainer">
+    <property name="name" value="MySQL Enabler"/>
+    <property name="description" value="Enabler for MySQL 5.6"/>
+    <property name="version" value="0.0.5"/>
+    <property name="distributionVersion" value="5.6.12"/>
+    <property name="blocking" value="false"/>
+    <property name="supportedDomainType" value="Default"/>
+    
+    <script class="com.datasynapse.fabric.common.script.Script">
+        <property name="name" value="mysql-enabler.py"/>
+        <property name="language" value="jython"/>
+        <property name="languageVersion" value="2.5"/>
+    </script>
+    
+    <supportedFeature class="com.datasynapse.fabric.container.Feature">
+        <property name="name" value="Capture Support"/>
+        <property name="description" value="Support for capturing running Components"/>
+        <property name="infoDescription" value="Specify if capture is enabled for this Component"/>
+        <property name="infoClass" value="com.datasynapse.fabric.domain.featureinfo.CaptureFeatureInfo"/>
+    </supportedFeature>
+    
+    <runtimecontexttemplate class="com.datasynapse.fabric.common.DefaultRuntimeContext">
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+            <property name="name" value="DELETE_RUNTIME_DIR_ON_SHUTDOWN"/>
+            <property name="value" value="false"/>
+        </variable>
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+            <property name="name" value="MYSQL_ROOT_DIR"/>
+            <property name="value" value="${CONTAINER_WORK_DIR}/mysql"/>
+            <property name="description" value="Path where MySQL resides after installation"/>
+        </variable>
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+            <property name="name" value="MYSQL_DATA_DIR"/>
+            <property name="value" value="${MYSQL_ROOT_DIR}/data"/>
+            <property name="description" value="Path where database files are located"/>
+        </variable>
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+            <property name="name" value="MYSQL_HOST_IP"/>
+            <property name="value" value="${LISTEN_ADDRESS}"/>
+            <property name="export" value="true"/>
+        </variable>
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+            <property name="name" value="MYSQL_PORT"/>
+            <property name="value" value="3306"/>
+            <property name="export" value="true"/>
+            <property name="autoIncrementType" value="Numeric"/>
+        </variable>
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+            <property name="name" value="CAPTURE_INCLUDES"/>
+            <property name="value" value="mysql/data/*"/>
+        </variable>
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+            <property name="name" value="CAPTURE_EXCLUDES"/>
+            <property name="value" value="mysql/data/*.pid"/>
+        </variable>
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+            <property name="name" value="MYSQL_SOCKET"/>
+            <property name="value" value="${MYSQL_ROOT_DIR}/mysql.sock"/>
+        </variable>
+        <variable class="com.datasynapse.fabric.common.RuntimeContextVariable">
+            <property name="name" value="MYSQL_LANGUAGE"/>
+            <property name="value" value="${MYSQL_ROOT_DIR}/lc"/>
+        </variable>
+    </runtimecontexttemplate>
+    
+    <statisticsProvider class="com.datasynapse.fabric.stats.provider.ContainerScriptStatisticsProvider">
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Aborted Clients"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Connections"/>
+		    <property name="description" value="The number of connections that were aborted because the client died without closing the connection properly"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Aborted Connects"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Attempts"/>
+		    <property name="description" value="The number of failed attempts to connect to the MySQL server"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Binlog Cache Disk Use"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Transactions"/>
+		    <property name="description" value="The number of failed attempts to connect to the MySQL server"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Binlog Cache Use"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Transactions"/>
+		    <property name="description" value="The number of transactions that used the temporary binary log cache"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Binlog Stmt Cache Disk Use"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of nontransaction statements that used the binary log statement cache but that exceeded the value of binlog_stmt_cache_size and used a temporary file to store those statements"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Binlog Stmt Cache Use"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of nontransactional statements that used the binary log statement cache"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Bytes Received"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Bytes"/>
+		    <property name="description" value="The number of bytes received from all clients"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Bytes Sent"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Bytes"/>
+		    <property name="description" value="The number of bytes sent to all clients"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Admin Commands"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of admin command statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Assign To Keycache"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of assign to keycache statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Alter DB"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of alter db statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Alter DB Upgrade"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of alter db upgrade statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Alter Event"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of alter event statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Alter Function"/>
+		    <property name="default" value="false"/><property name="units" value="Statements"/>
+		    <property name="description" value="The number of alter function statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Alter Procedure"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of alter procedure statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Alter Server"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of ater server statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Alter Table"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of alter table statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Alter Tablespace"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of alter tablespace statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Analyze"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of analyze statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Begin"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of begin statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Binlog"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of binlog statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Call Procedure"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of call procedure statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Change DB"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of change db statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Change Master"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of change master statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Check"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of check statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Checksum"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of checksum statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Commit"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of commit statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Create DB"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of create db statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Create Event"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of create event statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Create Function"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of create function statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Create Index"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of create index statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Create Procedure"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of create procedure statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Create Server"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of create server statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Create Table"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of create table statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Create Trigger"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of create trigger statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Create UDF"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of create udf statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Create User"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of create user statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Create View"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of create view statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Dealloc SQL"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of dalloc sql statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Delete"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of delete statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Delete Multi"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of delete multi statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Do"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of do statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Drop DB"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of drop db statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Drop Event"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of drop event statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Drop Function"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of drop function statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Drop Index"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of drop index statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Drop Procedure"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of drop procedure statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Drop Server"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of drop server statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Drop Table"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of drop table statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Drop Trigger"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of drop trigger statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Drop User"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of drop user statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Drop View"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of drop view statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Empty Query"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of empty query statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Execute SQL"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of execute sql statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Flush"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of flush statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Grant"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of grant statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com HA Close"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of ha close statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com HA Open"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of ha open statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com HA Read"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of ha read statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Help"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of help statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Insert"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of insert statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Insert Select"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of insert select statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Install Plugin"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of install plugin statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Kill"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of kill statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Load"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of load statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Lock Tables"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of lock tables statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Optimize"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of optimize statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Preload Keys"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of preload keys statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Prepare SQL"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of prepare sql statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Purge"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of purge statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Purge Before Date"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of purge before date statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Release Savepoint"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of release savepoint statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Rename Table"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of rename table statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Rename User"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of rename user statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Repair"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of repair statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Replace"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of replace statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Replace Select"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of replace select statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Reset"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of reset statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Resignal"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of resignal statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Revoke"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of revoke statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Revoke All"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of revoke all statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Rollback"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of rollback statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Rollback To Savepoint"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of rollback to savepoint statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Savepoint"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of savepoint statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Select"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of select statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Set Option"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of set option statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Signal"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of signal statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Authors"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show authors statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Binlog Events"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show binlog events statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Binlogs"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show binlogs statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Charsets"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show charsets statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Collations"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show collations statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Contributors"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show contributors statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Create DB"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show create db statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Create Event"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show create event statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Create Func"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show create func statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Create Proc"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show create proc statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Create Table"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show create table statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Create Trigger"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show create trigger statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Databases"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show databases statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Engine Logs"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show engine logs statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Engine Mutex"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show engine mutex statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Engine Status"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show engine status statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Events"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show events statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Errors"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show errors statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Fields"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show fields statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Function Status"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show function status statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Grants"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show grants statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Keys"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show keys statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Master Status"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show master status statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Open Tables"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show open tables statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Plugins"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show plugins statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Privileges"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show privileges statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Procedure Status"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show procedure status statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Processlist"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show processlist statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Profile"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show profile statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Profiles"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show profiles statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Relaylog Events"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show relaylog events statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Slave Hosts"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show slave hosts statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Slave Status"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show slave status statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Status"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show status statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Storage Engines"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show storage engines statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Table Status"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show table status statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Tables"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show tables statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Triggers"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show triggers statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Variables"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show variables statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Show Warnings"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of show warnings statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Slave Start"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of slave start statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Slave Stop"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of slave stop statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Stmt Close"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of stmt close statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Stmt Execute"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of stmt execute statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Stmt Fetch"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of stmt fetch statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Stmt Prepare"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of stmt prepare statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Stmt Reprepare"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of stmt reprepare statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Stmt Reset"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of stmt reset statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Stmt Send Long Data"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of stmt send long data statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Truncate"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of truncate statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Uninstall Plugin"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of uninstall plugin statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Unlock Tables"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of unlock tables statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Update"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of update statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com Update Multi"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of update multi statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com XA Commit"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of xa commit statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com XA End"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of xa end statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com XA Prepare"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of xa prepare statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com XA Recover"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of xa recover statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com XA Rollback"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of xa rollback statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Com XA Start"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of xa start statements that have been executed"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Connections"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Connections"/>
+		    <property name="description" value="The number of connection attempts (successful or not) to the MySQL server"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Created Tmp Disk Tables"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Tables"/>
+		    <property name="description" value="The number of internal on-disk temporary tables created by the server while executing statements"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Created Tmp Files"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Files"/>
+		    <property name="description" value="How many temporary files mysqld has created"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Created Tmp Tables"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Tables"/>
+		    <property name="description" value="The number of internal temporary tables created by the server while executing statements"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Delayed Errors"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Rows"/>
+		    <property name="description" value="The number of rows written with INSERT DELAYED for which some error occurred"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Delayed Insert Threads"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Threads"/>
+		    <property name="description" value="The number of INSERT DELAYED handler threads in use"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Delayed Writes"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Rows"/>
+		    <property name="description" value="The number of INSERT DELAYED rows written"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Flush Commands"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Times"/>
+		    <property name="description" value="The number of times the server flushes tables"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler Commit"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="Statements"/>
+		    <property name="description" value="The number of internal COMMIT statements"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_delete"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_discover"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_prepare"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_read_first"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_read_key"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_read_last"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_read_next"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_read_prev"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_read_rnd"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_read_rnd_next"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_rollback"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_savepoint"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_savepoint_rollback"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_update"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Handler_write"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_pages_data"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_pages_dirty"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_pages_flushed"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_pages_free"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_pages_misc"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_pages_total"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_read_ahead_rnd"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_read_ahead"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_read_ahead_evicted"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_read_requests"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_reads"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_wait_free"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_buffer_pool_write_requests"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_data_fsyncs"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_data_pending_fsyncs"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_data_pending_reads"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_data_pending_writes"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_data_read"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_data_reads"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_data_writes"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_data_written"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_dblwr_pages_written"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_dblwr_writes"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_have_atomic_builtins"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_log_waits"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_log_write_requests"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_log_writes"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_os_log_fsyncs"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_os_log_pending_fsyncs"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_os_log_pending_writes"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_os_log_written"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_page_size"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_pages_created"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_pages_read"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_pages_written"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_row_lock_current_waits"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_row_lock_time"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_row_lock_time_avg"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_row_lock_time_max"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_row_lock_waits"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_rows_deleted"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_rows_inserted"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_rows_read"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_rows_updated"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Innodb_truncated_status_writes"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Key_blocks_not_flushed"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Key_blocks_unused"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Key_blocks_used"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Key_read_requests"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Key_reads"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Key_write_requests"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Key_writes"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Last_query_cost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Max_used_connections"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Not_flushed_delayed_rows"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Open_files"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Open_streams"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Open_table_definitions"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Open_tables"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Opened_files"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Opened_table_definitions"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Opened_tables"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_cond_classes_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_cond_instances_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_file_classes_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_file_handles_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_file_instances_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_locker_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_mutex_classes_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_mutex_instances_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_rwlock_classes_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_rwlock_instances_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_table_handles_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_table_instances_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_thread_classes_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Performance_schema_thread_instances_lost"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Prepared_stmt_count"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Qcache_free_blocks"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Qcache_free_memory"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Qcache_hits"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Qcache_inserts"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Qcache_lowmem_prunes"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Qcache_not_cached"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Qcache_queries_in_cache"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Qcache_total_blocks"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Queries"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Questions"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Rpl_status"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Select_full_join"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Select_full_range_join"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Select_range"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Select_range_check"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Select_scan"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Slave_heartbeat_period"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Slave_open_temp_tables"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Slave_received_heartbeats"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Slave_retried_transactions"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Slave_running"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Slow_launch_threads"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Slow_queries"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Sort_merge_passes"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Sort_range"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Sort_rows"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Sort_scan"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_accept_renegotiates"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_accepts"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_callback_cache_hits"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_cipher"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_cipher_list"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_client_connects"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_connect_renegotiates"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_ctx_verify_depth"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_ctx_verify_mode"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_default_timeout"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_finished_accepts"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_finished_connects"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_session_cache_hits"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_session_cache_misses"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_session_cache_mode"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_session_cache_overflows"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_session_cache_size"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_session_cache_timeouts"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_sessions_reused"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_used_session_cache_entries"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_verify_depth"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_verify_mode"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Ssl_version"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Table_locks_immediate"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Table_locks_waited"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Tc_log_max_pages_used"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Tc_log_page_size"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Tc_log_page_waits"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Threads_cached"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="threads"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Threads_connected"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="threads"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Threads_created"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="threads"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Threads_running"/>
+		    <property name="default" value="false"/>
+		    <property name="units" value="threads"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Uptime"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+		  <supportedStatistic class="com.datasynapse.fabric.common.script.ScriptStatisticsMetadata">
+		    <property name="name" value="Uptime_since_flush_status"/>
+		    <property name="default" value="false"/>
+		  </supportedStatistic>
+	  </statisticsProvider>
+</container>
