@@ -50,7 +50,7 @@
     <property name="supportedDomainType" value="Default"/>
     
     <script class="com.datasynapse.fabric.common.script.Script">
-        <property name="name" value="mysql-enabler-egoodman.py"/>
+        <property name="name" value="mysql-enabler.py"/>
         <property name="language" value="jython"/>
         <property name="languageVersion" value="2.5"/>
     </script>
